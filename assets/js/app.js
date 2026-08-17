@@ -1,6 +1,6 @@
 /* Main UI logic. Data lives in assets/js/masjids.js. */
 (() => {
-  const data = window.MASJIDS || [];
+  let data = [];
   const $ = (id) => document.getElementById(id);
   const normalize = (value) => String(value || "").toLowerCase().normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, " ").trim();
@@ -162,5 +162,37 @@
     const [lat,lng]=approximateCoords(m); map.setView([lat,lng],16);
   });
 
-  setupSearch(); setupAreas(); setupMap(); setupNearMe(); render();
+  async function loadData() {
+  try {
+    const response = await fetch("/api/masjids");
+    if (!response.ok) throw new Error("API request failed");
+
+    const rows = await response.json();
+
+    data = rows.map(m => ({
+      ...m,
+      times: {
+        Fajr: m.fajr,
+        Zuhr: m.dhuhrr,
+        Asr: m.asr,
+        Maghrib: m.maghrib,
+        Isha: m.isha
+      },
+      map: m.map || `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(m.name + " " + m.address)}`
+    }));
+
+    setupSearch();
+    setupAreas();
+    setupMap();
+    setupNearMe();
+    render();
+
+    console.log(`Loaded ${data.length} masjids from API`);
+  } catch (error) {
+    console.error("Failed to load masjid data:", error);
+    $("results").innerHTML = "<p>Unable to load masjid data.</p>";
+  }
+}
+
+loadData();
 })();
