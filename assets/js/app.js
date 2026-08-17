@@ -173,7 +173,7 @@
       ...m,
       times: {
         Fajr: m.fajr,
-        Zuhr: m.dhuhrr,
+        Zuhr: m.dhuhr,
         Asr: m.asr,
         Maghrib: m.maghrib,
         Isha: m.isha
